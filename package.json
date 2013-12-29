@@ -1,0 +1,18 @@
+{
+  "name": "carcaclone",
+  "version": "0.0.0",
+  "description": "Carcassone clone",
+  "private": true,
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/twelve13/carcaclone.git"
+  },
+  "author": "twelve13",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/twelve13/carcaclone/issues"
+  }
+}
