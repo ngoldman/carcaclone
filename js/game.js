@@ -2,11 +2,87 @@
 
 (function(window){
 
-//=================================== The Game ================================
+// shared functions
 
-// Lord of all you see before you
-// One day this shall all belong to you
-// We must keep the law of this land, for we its guardians and shepherds
+function shuffle(array) {
+  var temporaryValue, randomIndex;
+  var currentIndex = array.length;
+
+  // While there remain elements to shuffle...
+  while (0 !== currentIndex) {
+
+    // Pick a remaining element...
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex -= 1;
+
+    // And swap it with the current element.
+    temporaryValue = array[currentIndex];
+    array[currentIndex] = array[randomIndex];
+    array[randomIndex] = temporaryValue;
+  }
+
+  return array;
+}
+
+// shared variables
+
+var available_tiles = [
+  {
+    count: 2,
+    options: {
+      edges: ["f", "f", "r", "f"],
+      fields: ["m", "m", "m", "m"]
+    }
+  },
+  {
+    count: 4,
+    options: {
+      edges: ["f", "f", "f", "f"],
+      fields: ["m", "m", "m", "m"]
+    }
+  },
+  {
+    count: 1,
+    options: {
+      edges: ["c", "c", "c", "c"],
+      fields: ["c", "c", "c", "c"],
+      pennant: true
+    }
+  },
+  {
+    // The manual tells us that there are 4 of these tiles,
+    // but 1 of them is the Start tile, so we can only
+    // allow players to draw the remaining 3.
+    count: 3,
+    options: {
+      edges: ["r", "c", "r", "f"],
+      fields: [1, 2, 2, 1]
+    }
+  },
+  {
+    count: 5,
+    options: {
+      edges: ["c", "f", "f", "f"],
+      fields: [1, 1, 1, 1]
+    }
+  },
+  {
+    count: 2,
+    options: {
+      edges: ["f", "c", "f", "c"],
+      fields: ["c", "c", "c", "c"],
+      pennant: true
+    }
+  }
+  // TODO: add tiles G through X
+];
+
+var start_tile = {
+  edges: ["r", "c", "r", "f"],
+  fields: [1, 2, 2, 1]
+};
+
+//=================================== The Game ================================
 
 function Game (players) {
   this.stack = new Stack(); // An array of tiles to be placed
@@ -15,80 +91,46 @@ function Game (players) {
   this.turn; // A name
   this.score; // A set of name-score pairs
 
-  console.log('hello!', this);
+  // test that first tile is always the same, second is random
+  $('#stack').append('<p>first tile: ' + JSON.stringify(this.stack.draw()) + '</p>');
+  $('#stack').append('<p>second tile: ' + JSON.stringify(this.stack.draw()) + '</p>');
 }
 
 //=================================== The Stack ===============================
+// Has a stack of tiles that it shuffles on creation.
+// First tile is always the same (start tile).
+// Has a draw() method that returns the next tile until it's empty.
 
 function Stack () {
 
-  function rand() {
-    return Math.floor(Math.random() * 24);
+  this.tiles = [];
+
+  var count, tile_type;
+  var i = available_tiles.length - 1;
+
+  for (i; i > 0; i--) {
+    tile_type = available_tiles[i];
+    count = tile_type.count;
+
+    while (count--) {
+      this.tiles.push(new Tile(tile_type.options));
+    }
   }
 
-  var available_tiles;
+  // shuffle tiles
+  this.tiles = shuffle(this.tiles);
 
-  available_tiles = [
-    {
-      count: 2,
-      options: {
-        edges: ["f", "f", "r", "f"],
-        fields: ["m", "m", "m", "m"]
-      }
-    },
-    {
-      count: 4,
-      options: {
-        edges: ["f", "f", "f", "f"],
-        fields: ["m", "m", "m", "m"]
-      }
-    },
-    {
-      count: 1,
-      options: {
-        edges: ["c", "c", "c", "c"],
-        fields: ["c", "c", "c", "c"],
-        pennant: true
-      }
-    },
-    {
-      // The manual tells us that there are 4 of these tiles,
-      // but 1 of them is the Start tile, so we can only
-      // allow players to draw the remaining 3.
-      count: 3,
-      options: {
-        edges: ["r", "c", "r", "f"],
-        fields: [1, 2, 2, 1]
-      }
-    },
-    {
-      count: 5,
-      options: {
-        edges: ["c", "f", "f", "f"],
-        fields: [1, 1, 1, 1]
-      }
-    },
-    {
-      count: 2,
-      options: {
-        edges: ["f", "c", "f", "c"],
-        fields: ["c", "c", "c", "c"],
-        pennant: true
-      }
-    }
-    // TODO: add tiles G through X
-  ];
+  // add start tile to end of stack so it will be drawn first
+  this.tiles.push(new Tile(start_tile));
 
   this.draw = function() {
+    // return false if out of tiles
+    if (!this.tiles.length) {
+      return false;
+    }
 
-    var tile;
-
-    do {
-      tile = available_tiles[rand()];
-    } while (tile.count = 0);
-
-    available_tiles[i].count -= 1;
-    return (new Tile(tile.options));
+    // otherwise pop a tile off the end of the stack
+    return this.tiles.pop();
   };
 }
 
@@ -184,7 +226,7 @@ function Map () {
     fields: [1, 1, 2, 2]
   });
 
-  this.tiles[0][0] = start_tile;
+  // this.tiles[0][0] = start_tile;
 
   this.get_tile = function (x, y) {
     return this.tiles[x][y];
