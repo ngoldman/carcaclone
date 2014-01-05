@@ -5,11 +5,11 @@
 // shared functions
 
 function shuffle(array) {
-	// Found this super concise shuffle function at
-	// http://flippinawesome.org/2013/12/23/45-useful-javascript-tips-tricks-and-best-practices/
-	// It uses the sort method to randomly swap or not swap elements as it
-	// traverses the array.
-	array.sort(function(){ return Math.random() - 0.5});
+  // Found this super concise shuffle function at
+  // http://flippinawesome.org/2013/12/23/45-useful-javascript-tips-tricks-and-best-practices/
+  // It uses the sort method to randomly swap or not swap elements as it
+  // traverses the array.
+  array.sort(function(){ return Math.random() - 0.5});
   return array;
 }
 
@@ -186,100 +186,101 @@ function Map() {
   // ====================== Module-level values
 
   // When we need to look at everything around a space on the map, we need to
-	// add these offsets to the coordinates of the space.
-	this.cartesian_offsets = [
-		{x: 0, y: -1}, {x: 1, y: 0}, {x: 0, y: 1}, {x: -1, y: 0}
-	];
-			
-	// Given a space on the map, return the contents of the adjacent spaces as an
-	// array of tiles.
-	this.list_surroundings = function (coords) {
-		var surroundings = [];
-		var new_coords, i;
+  // add these offsets to the coordinates of the space.
+  this.cartesian_offsets = [
+    {x: 0, y: -1}, {x: 1, y: 0}, {x: 0, y: 1}, {x: -1, y: 0}
+  ];
 
-		for (i = 4; i--; ) {
-			new_coords = {
-				x: coords.x + this.cartesian_offsets[i].x,
-				y: coords.y + this.cartesian_offsets[i].y
-			};
-			surroundings.push(this.get_tile(new_coords));
-		}
+  // Given a space on the map, return the contents of the adjacent spaces as an
+  // array of tiles.
+  this.list_surroundings = function (coords) {
+    var surroundings = [];
+    var new_coords, i;
 
-		return surroundings;
-	}
-	
-	// Set up an array of arrays that we will place tiles into. Even if the
-	// players build very far in one direction, a board with 40 columns should
-	// suffice.
-	this.tiles = (function () {
-		var temp = [];
-		for (var i = 40; i--; ) {
-			temp[i] = [];
-		}
-		return temp;
-	}());
+    for (i = 4; i--; ) {
+      new_coords = {
+        x: coords.x + this.cartesian_offsets[i].x,
+        y: coords.y + this.cartesian_offsets[i].y
+      };
+      surroundings.push(this.get_tile(new_coords));
+    }
 
-	return this;
+    return surroundings;
+        
+  }
+
+  // Set up an array of arrays that we will place tiles into. Even if the
+  // players build very far in one direction, a board with 40 columns should
+  // suffice.
+  this.tiles = (function () {
+    var temp = [];
+    for (var i = 40; i--; ) {
+      temp[i] = [];
+    }
+    return temp;
+  }());
+
+  return this;
 
 }
 
 Map.prototype.add_tile = function (tile, coords) {
 
-	var surroundings = this.list_surroundings(coords);
+  var surroundings = this.list_surroundings(coords);
 
-	function valid_placement(tile, coords) {
-		return (tiles_adjacent(coords) && edges_match(tile, coords));
-	}
+  function valid_placement(tile, coords) {
+    return (tiles_adjacent(coords) && edges_match(tile, coords));
+  }
 
-	function tiles_adjacent(coords) {
-		// Check the surrounds list for at least one element that's a Tile. The
-		// SOME method takes a function with three arguments, the element, the
-		// index and the array.
-		return surroundings.some(function (e, i, a) {
-			return (e instanceof Tile);
-		});
-	}
+  function tiles_adjacent(coords) {
+    // Check the surrounds list for at least one element that's a Tile. The
+    // SOME method takes a function with three arguments, the element, the
+    // index and the array.
+    return surroundings.some(function (e, i, a) {
+      return (e instanceof Tile);
+    });
+  }
 
-	function edges_match(tile, coords) {
-		// Since we used PUSH to build the surroundings array, the tiles it
-		// contains are in counterclockwise order. Reverse the array to resolve the
-		// discrepancy. 
-		var adj_tiles = surroundings.reverse();
+  function edges_match(tile, coords) {
+    // Since we used PUSH to build the surroundings array, the tiles it
+    // contains are in counterclockwise order. Reverse the array to resolve the
+    // discrepancy. 
+    var adj_tiles = surroundings.reverse();
 
-		var i, j, old_edge, new_edge;
+    var i, j, old_edge, new_edge;
 
-		for (i = 4; i--; ) {
-			// The loop index will give us the correct edge on the new tile, but we
-			// need to index the opposite edge for the old tile.
-			j = (i + 2) % 4;
+    for (i = 4; i--; ) {
+      // The loop index will give us the correct edge on the new tile, but we
+      // need to index the opposite edge for the old tile.
+      j = (i + 2) % 4;
 
-			// If we don't find an EDGES property where we expect it, we're looking
-			// at an empty space. While an empty space doesn't technically match an
-			// edge, we'd like to return TRUE when we find one. Therefore, in the
-			// case of an empty space, we'll give OLD_EDGE the same value that we're
-			// about to give NEW_EDGE.
-			old_edge = adj_tiles[i].edges[j] || tile.edges[i];
+      // If we don't find an EDGES property where we expect it, we're looking
+      // at an empty space. While an empty space doesn't technically match an
+      // edge, we'd like to return TRUE when we find one. Therefore, in the
+      // case of an empty space, we'll give OLD_EDGE the same value that we're
+      // about to give NEW_EDGE.
+      old_edge = adj_tiles[i].edges[j] || tile.edges[i];
 
-			new_edge = tile.edges[i];
-			if ( old_edge !== new_edge ) {
-				return false;
-			}
-
+      new_edge = tile.edges[i];
+      if ( old_edge !== new_edge ) {
+        return false;
+      }
     }
-		return true;
-	}
 
-	if (valid_placement(tile, coords)) {
-		this.tiles[coords.x + 20][coords.y + 20] = tile;
-		return true;
-	} else {
-		return false;
-	}
+    return true;
 
+  }
+
+  if (valid_placement(tile, coords)) {
+    this.tiles[coords.x + 20][coords.y + 20] = tile;
+    return true;
+  } else {
+    return false;
+  }
 }
 
 Map.prototype.get_tile = function (coords) {
-	return this.tiles[coords.x + 20][coords.y + 20];
+  return this.tiles[coords.x + 20][coords.y + 20];
 }
 //=============================== Followers ==================================
 
