@@ -76,7 +76,7 @@ var start_tile = {
 function Game (players) {
   this.stack = new Stack(); // An array of tiles to be placed
   this.map = new Map(); // A 2D array of placed tiles
-  this.players = players; // An ordered list of names
+  this.players = new Player_list(players); // An ordered list of names
   this.turn; // A name, or an index into the PLAYERS list
   this.score; // A set of name-score pairs
 
@@ -281,14 +281,6 @@ Map.prototype.add_tile = function (tile, coords) {
 
 Map.prototype.get_tile = function (coords) {
   return this.tiles[coords.x + 20][coords.y + 20];
-}
-//=============================== Followers ==================================
-
-// Follower of a certain type
-// types: farmer, thief, knight, monk
-function Follower (type, owner) {
-  this.type = type;
-  this.owner = owner;
 }
 
 window.Carcaclone = Game;
