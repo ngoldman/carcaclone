@@ -5,22 +5,11 @@
 // shared functions
 
 function shuffle(array) {
-  var temporaryValue, randomIndex;
-  var currentIndex = array.length;
-
-  // While there remain elements to shuffle...
-  while (0 !== currentIndex) {
-
-    // Pick a remaining element...
-    randomIndex = Math.floor(Math.random() * currentIndex);
-    currentIndex -= 1;
-
-    // And swap it with the current element.
-    temporaryValue = array[currentIndex];
-    array[currentIndex] = array[randomIndex];
-    array[randomIndex] = temporaryValue;
-  }
-
+	// Found this super concise shuffle function at
+	// http://flippinawesome.org/2013/12/23/45-useful-javascript-tips-tricks-and-best-practices/
+	// It uses the sort method to randomly swap or not swap elements as it
+	// traverses the array.
+	array.sort(function(){ return Math.random() - 0.5});
   return array;
 }
 
@@ -88,7 +77,7 @@ function Game (players) {
   this.stack = new Stack(); // An array of tiles to be placed
   this.map = new Map(); // A 2D array of placed tiles
   this.players = players; // An ordered list of names
-  this.turn; // A name
+  this.turn; // A name, or an index into the PLAYERS list
   this.score; // A set of name-score pairs
 
   // test that first tile is always the same, second is random
@@ -182,64 +171,116 @@ Tile.prototype.rotate = function () {
   this.fields = new_fields;
 };
 
-//============================ The Map ========================================
+//============================ The Map =========================================
 
-// The game starts with just the Start Tile on the map. Each turn, a player
-// will add a tile to the map whose edges match with the edges of any adjacent
-// tiles that are already part of the map.
+// My last attempt lacked a clear data structure to manage the tiles on the map,// and only implemented a GET_TILE method. In this proposal, we'll initialize an
+// array of arrays so that we can freely address spaces by integer math.
 
-// The map can also answer questions for us about features that extend across
-// multiple tiles. These features are roads, fields, cities and monasteries. We
-// will ask these questions when we update the score at the end of each turn
-// and at the very end of game.
+// The rules dictate that the map is built from the start tile out in all
+// directions. This suggests that we use a Cartesian coordinate system with the
+// start tile at the origin. The simplest way to account for this is to add an
+// offset
 
-function Map () {
-  var start_tile;
+function Map() {
 
-  var check_surrounding = (function() {
+  // ====================== Module-level values
 
-    var x_offsets = [0, 1, 0, -1];
-    var y_offsets = [-1, 0, 1, 0];
+  // When we need to look at everything around a space on the map, we need to
+	// add these offsets to the coordinates of the space.
+	this.cartesian_offsets = [
+		{x: 0, y: -1}, {x: 1, y: 0}, {x: 0, y: 1}, {x: -1, y: 0}
+	];
+			
+	// Given a space on the map, return the contents of the adjacent spaces as an
+	// array of tiles.
+	this.list_surroundings = function (coords) {
+		var surroundings = [];
+		var new_coords, i;
 
-    return (function (coords, prop) {
-      var i, x, y, result;
+		for (i = 4; i--; ) {
+			new_coords = {
+				x: coords.x + this.cartesian_offsets[i].x,
+				y: coords.y + this.cartesian_offsets[i].y
+			};
+			surroundings.push(this.get_tile(new_coords));
+		}
 
-      result = true;
+		return surroundings;
+	}
+	
+	// Set up an array of arrays that we will place tiles into. Even if the
+	// players build very far in one direction, a board with 40 columns should
+	// suffice.
+	this.tiles = (function () {
+		var temp = [];
+		for (var i = 40; i--; ) {
+			temp[i] = [];
+		}
+		return temp;
+	}());
 
-      for (i = 4; i--; ) {
-        x = coords.x + x_offsets[i];
-        y = coords.y + y_offsets[i];
-        if (!prop(x, y)) {
-          result = false;
-          break;
-        }
-      }
+	return this;
 
-      return result;
-
-    }());
-
-  });
-
-  start_tile = new Tile ({
-    edges: ["c", "r", "f", "r"],
-    fields: [1, 1, 2, 2]
-  });
-
-  // this.tiles[0][0] = start_tile;
-
-  this.get_tile = function (x, y) {
-    return this.tiles[x][y];
-  };
 }
 
-Map.prototype.add_tile = function (tile, x, y) {
+Map.prototype.add_tile = function (tile, coords) {
 
-  // Tiles must be added to the map adjacent to at least one existing
-  // tile.
-  check_surrounding({x: x, y: y}, function (x, y) {});
-};
+	var surroundings = this.list_surroundings(coords);
 
+	function valid_placement(tile, coords) {
+		return (tiles_adjacent(coords) && edges_match(tile, coords));
+	}
+
+	function tiles_adjacent(coords) {
+		// Check the surrounds list for at least one element that's a Tile. The
+		// SOME method takes a function with three arguments, the element, the
+		// index and the array.
+		return surroundings.some(function (e, i, a) {
+			return (e instanceof Tile);
+		});
+	}
+
+	function edges_match(tile, coords) {
+		// Since we used PUSH to build the surroundings array, the tiles it
+		// contains are in counterclockwise order. Reverse the array to resolve the
+		// discrepancy. 
+		var adj_tiles = surroundings.reverse();
+
+		var i, j, old_edge, new_edge;
+
+		for (i = 4; i--; ) {
+			// The loop index will give us the correct edge on the new tile, but we
+			// need to index the opposite edge for the old tile.
+			j = (i + 2) % 4;
+
+			// If we don't find an EDGES property where we expect it, we're looking
+			// at an empty space. While an empty space doesn't technically match an
+			// edge, we'd like to return TRUE when we find one. Therefore, in the
+			// case of an empty space, we'll give OLD_EDGE the same value that we're
+			// about to give NEW_EDGE.
+			old_edge = adj_tiles[i].edges[j] || tile.edges[i];
+
+			new_edge = tile.edges[i];
+			if ( old_edge !== new_edge ) {
+				return false;
+			}
+
+    }
+		return true;
+	}
+
+	if (valid_placement(tile, coords)) {
+		this.tiles[coords.x + 20][coords.y + 20] = tile;
+		return true;
+	} else {
+		return false;
+	}
+
+}
+
+Map.prototype.get_tile = function (coords) {
+	return this.tiles[coords.x + 20][coords.y + 20];
+}
 //=============================== Followers ==================================
 
 // Follower of a certain type
@@ -247,27 +288,6 @@ Map.prototype.add_tile = function (tile, x, y) {
 function Follower (type, owner) {
   this.type = type;
   this.owner = owner;
-}
-
-// In order to place a new tile, its edges must match with the
-// existing adjacent edges.
-
-function is_valid_placement(new_tile, coords) {
-
-  var i, x, y, test_edge;
-  var valid_so_far = true;
-
-  // Does each edge match with the tiles already on the board?
-  for (i = 4; i -= 1; ) {
-    x = coords.x + x_offsets[i];
-    y = coords.y + y_offsets[i];
-    test_edge = board.get_tile(x, y).edge[i];
-    if (new_tile.edge[i] != test_edge) {
-      valid_so_far = false;
-    }
-  }
-
-  return valid_so_far;
 }
 
 window.Carcaclone = Game;
