@@ -259,7 +259,9 @@ function carca_Map() {
       surroundings.push(this.get_tile(new_coords));
     }
 
-    return surroundings;
+    // Since we used PUSH, the tiles are actually listed in counterclockwise
+    // order. Return them in clockwise order so that everything is consistent.
+    return surroundings.reverse();
         
   }
 
@@ -287,7 +289,7 @@ function carca_Map() {
 
 carca_Map.prototype.add_tile = function (tile, coords) {
 
-  var surroundings = this.list_surroundings(coords);
+  var adj = this.list_surroundings(coords);
 
   function valid_placement(tile, coords) {
     return (tiles_adjacent(coords) && edges_match(tile, coords));
@@ -297,18 +299,12 @@ carca_Map.prototype.add_tile = function (tile, coords) {
     // Check the surrounds list for at least one element that's a Tile. The
     // SOME method takes a function with three arguments, the element, the
     // index and the array.
-    return surroundings.some(function (e, i, a) {
+    return adj.some(function (e, i, a) {
       return (e instanceof Tile);
     });
   }
 
   function edges_match(tile, coords) {
-    // Since we used PUSH to build the surroundings array, the tiles it
-    // contains are in counterclockwise order. Reverse the array to resolve the
-    // discrepancy. 
-    var adj_tiles = surroundings.reverse(); //<- May not need this
-    show("map", "adj_tiles is", adj_tiles);
-
     var i, j, old_edge, new_edge;
 
     for (i = 4; i--; ) {
@@ -321,9 +317,9 @@ carca_Map.prototype.add_tile = function (tile, coords) {
       // edge, we'd like to return TRUE when we find one. Therefore, in the
       // case of an empty space, we'll give OLD_EDGE the same value that we're
       // about to give NEW_EDGE.
-      show("map", "adj_tiles[" + i + "] is", adj_tiles[i]);
+      show("map", "adj_tiles[" + i + "] is", adj[i]);
       old_edge = (
-        (adj_tiles[i] && adj_tiles[i].edges && adj_tiles[i].edges[j]) ||
+        (adj[i] && adj[i].edges && adj[i].edges[j]) ||
         tile.edges[i]
       );
 
