@@ -75,7 +75,7 @@ var start_tile = {
 
 function Game (players) {
   this.stack = new Stack(); // An array of tiles to be placed
-  this.map = new Map(); // A 2D array of placed tiles
+  this.map = new carca_Map(); // A 2D array of placed tiles
   this.turn; // A name, or an index into the PLAYERS list
   this.score; // A set of name-score pairs
 
@@ -202,7 +202,8 @@ Tile.prototype.rotate = function () {
 // start tile at the origin. The simplest way to account for this is to add an
 // offset
 
-function Map() {
+// "Map" is a top-level var, so we have to give ours a unique name.
+function carca_Map() {
 
   // ====================== Module-level values
 
@@ -245,7 +246,7 @@ function Map() {
 
 }
 
-Map.prototype.add_tile = function (tile, coords) {
+carca_Map.prototype.add_tile = function (tile, coords) {
 
   var surroundings = this.list_surroundings(coords);
 
@@ -300,7 +301,7 @@ Map.prototype.add_tile = function (tile, coords) {
   }
 }
 
-Map.prototype.get_tile = function (coords) {
+carca_Map.prototype.get_tile = function (coords) {
   return this.tiles[coords.x + 20][coords.y + 20];
 }
 
