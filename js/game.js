@@ -71,6 +71,12 @@ var start_tile = {
   fields: [1, 2, 2, 1]
 };
 
+function show(id, text, obj) {
+  var elem = document.getElementById(id);
+  elem.innerHTML += "<h3>" + text + "</h3><br/>" + JSON.stringify(obj) + "<hr/>";
+}
+
+
 //=================================== The Game ================================
 
 function Game (players) {
@@ -101,6 +107,32 @@ function Game (players) {
     my_tile.rotate();
     hash_tile.innerHTML += "<br/>Now my_tile =" + JSON.stringify(my_tile);
   }
+  
+//  tile_tests();
+
+  function map_tests () {
+    var my_map = new carca_Map();
+
+//  show("map", "my_map just constructed", my_map);
+
+//  var surroundings = my_map.list_surroundings({x: 1, y: 0});
+//  show("map", "Surroundings of (1,0) are", surroundings);
+
+    var second_tile = new Tile({
+      edges: ["c", "c", "c", "c"],
+      fields: [1, 1, 1, 1]
+    });
+    var add_success = my_map.add_tile(second_tile, {x: 1, y: 0});
+    if (add_success) {
+      var surroundings = my_map.list_surroundings({x: 0, y: 0});
+      show("map", "Second tile added at (1,0). Now surroundings of (0,0) are",
+        surroundings);
+    } else {
+      show("map", "Failed to add second tile.", my_map);
+    }
+  }
+
+  map_tests();
 
 }
 
@@ -238,7 +270,14 @@ function carca_Map() {
     var temp = [];
     for (var i = 40; i--; ) {
       temp[i] = [];
+      for (var j = 40; j--; ) {
+        temp[i][j] = {};
+      }
     }
+    // As of 2014-01-06, have to add the first tile here in the constructor,
+    // otherwise, any attempt to add a tile will fail, because the first
+    // criterion for placing a tile is that it is adjacent to another tile.
+    temp[20][20] = new Tile(start_tile);
     return temp;
   }());
 
@@ -267,7 +306,8 @@ carca_Map.prototype.add_tile = function (tile, coords) {
     // Since we used PUSH to build the surroundings array, the tiles it
     // contains are in counterclockwise order. Reverse the array to resolve the
     // discrepancy. 
-    var adj_tiles = surroundings.reverse();
+    var adj_tiles = surroundings.reverse(); //<- May not need this
+    show("map", "adj_tiles is", adj_tiles);
 
     var i, j, old_edge, new_edge;
 
@@ -281,7 +321,11 @@ carca_Map.prototype.add_tile = function (tile, coords) {
       // edge, we'd like to return TRUE when we find one. Therefore, in the
       // case of an empty space, we'll give OLD_EDGE the same value that we're
       // about to give NEW_EDGE.
-      old_edge = adj_tiles[i].edges[j] || tile.edges[i];
+      show("map", "adj_tiles[" + i + "] is", adj_tiles[i]);
+      old_edge = (
+        (adj_tiles[i] && adj_tiles[i].edges && adj_tiles[i].edges[j]) ||
+        tile.edges[i]
+      );
 
       new_edge = tile.edges[i];
       if ( old_edge !== new_edge ) {
