@@ -76,13 +76,32 @@ var start_tile = {
 function Game (players) {
   this.stack = new Stack(); // An array of tiles to be placed
   this.map = new Map(); // A 2D array of placed tiles
-  this.players = new Player_list(players); // An ordered list of names
   this.turn; // A name, or an index into the PLAYERS list
   this.score; // A set of name-score pairs
 
+  
   // test that first tile is always the same, second is random
-  $('#stack').append('<p>first tile: ' + JSON.stringify(this.stack.draw()) + '</p>');
-  $('#stack').append('<p>second tile: ' + JSON.stringify(this.stack.draw()) + '</p>');
+  // Commenting these out because they throw errors when there is no network
+  // connection.
+
+  // $('#stack').append('<p>first tile: ' + JSON.stringify(this.stack.draw()) + '</p>');
+  // $('#stack').append('<p>second tile: ' + JSON.stringify(this.stack.draw()) + '</p>');
+
+  // The following tests can be run offline, a concession to Max, who has no
+  // internet at home.
+
+  function tile_tests() {
+    var my_tile = new Tile({
+      edges: ["a", "b", "c", "d"],
+      fields: ["1", "2", "3", "4"],
+    });
+
+    var hash_tile = document.getElementById("tile");
+    hash_tile.innerHTML = "my_tile = " + JSON.stringify(my_tile);
+    my_tile.rotate();
+    hash_tile.innerHTML += "<br/>Now my_tile =" + JSON.stringify(my_tile);
+  }
+
 }
 
 //=================================== The Stack ===============================
@@ -159,7 +178,9 @@ function Tile (options) {
 
 Tile.prototype.rotate = function () {
 
-  var new_edges, new_fields, i, j;
+  var new_edges = [],
+    new_fields = [],
+    i, j;
 
   for (i = 4; i--; ) {
     j = (i + 1) % 4;
@@ -281,6 +302,18 @@ Map.prototype.add_tile = function (tile, coords) {
 
 Map.prototype.get_tile = function (coords) {
   return this.tiles[coords.x + 20][coords.y + 20];
+}
+
+//======================  The List of Players  =================================
+
+function Player_list(players) {
+  // Start the game without any points
+  this.score = 0;
+
+  // Start the game with 7 followers to be placed
+  this.followers = 7;
+
+  //
 }
 
 window.Carcaclone = Game;
