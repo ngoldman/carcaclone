@@ -82,57 +82,35 @@ function show(id, text, obj) {
 function Game (players) {
   this.stack = new Stack(); // An array of tiles to be placed
   this.map = new carca_Map(); // A 2D array of placed tiles
-  this.turn; // A name, or an index into the PLAYERS list
-  this.score; // A set of name-score pairs
 
-  
-  // test that first tile is always the same, second is random
-  // Commenting these out because they throw errors when there is no network
-  // connection.
+  var current_tile, placement;
+  var player_count = players.length;
+  var current_player;
+  var turn = 0;
 
-  // $('#stack').append('<p>first tile: ' + JSON.stringify(this.stack.draw()) + '</p>');
-  // $('#stack').append('<p>second tile: ' + JSON.stringify(this.stack.draw()) + '</p>');
-
-  // The following tests can be run offline, a concession to Max, who has no
-  // internet at home.
-
-  function tile_tests() {
-    var my_tile = new Tile({
-      edges: ["a", "b", "c", "d"],
-      fields: ["1", "2", "3", "4"],
-    });
-
-    var hash_tile = document.getElementById("tile");
-    hash_tile.innerHTML = "my_tile = " + JSON.stringify(my_tile);
-    my_tile.rotate();
-    hash_tile.innerHTML += "<br/>Now my_tile =" + JSON.stringify(my_tile);
-  }
-  
-//  tile_tests();
-
-  function map_tests () {
-    var my_map = new carca_Map();
-
-//  show("map", "my_map just constructed", my_map);
-
-//  var surroundings = my_map.list_surroundings({x: 1, y: 0});
-//  show("map", "Surroundings of (1,0) are", surroundings);
-
-    var second_tile = new Tile({
-      edges: ["c", "c", "c", "c"],
-      fields: [1, 1, 1, 1]
-    });
-    var add_success = my_map.add_tile(second_tile, {x: 1, y: 0});
-    if (add_success) {
-      var surroundings = my_map.list_surroundings({x: 0, y: 0});
-      show("map", "Second tile added at (1,0). Now surroundings of (0,0) are",
-        surroundings);
+  while (this.stack.has_tiles()) {
+    current_player = players[turn];
+    current_tile = this.stack.draw();
+    if (Map.cant_accommodate(current_tile) {
+      break;
     } else {
-      show("map", "Failed to add second tile.", my_map);
+      show_placement_options(map, current_tile);
+      placement = current_player.get_placement()
+      Map.add_tile(current_tile, placement.coords);
+      Map.add_follower(placement.coords, placement.feature);
+      // TODO implement ADD_FOLLOWER
+
+      if (Map.feature_completed(current_tile, placement)) {
+        current_player.add_to_score(Map.turn_score(current_tile, placement);
+      }
     }
+    turn = (turn + 1) % player_count;
   }
 
-  map_tests();
+  for (turn = player_count; turn--; ) {
+    current_player = players[turn];
+    current_player.add_to_score(Map.final_scoring(current_player.name));
+  }
 
 }
 
@@ -155,6 +133,10 @@ function Stack () {
     while (count--) {
       this.tiles.push(new Tile(tile_type.options));
     }
+  }
+
+  this.has_tiles = function() {
+    return (this.tiles.length > 0);
   }
 
   // shuffle tiles
@@ -266,8 +248,7 @@ function carca_Map() {
   }
 
   // Set up an array of arrays that we will place tiles into. Even if the
-  // players build very far in one direction, a board with 40 columns should
-  // suffice.
+  // players build very far in one direction, a 40x40 board should suffice.
   this.tiles = (function () {
     var temp = [];
     for (var i = 40; i--; ) {
@@ -347,14 +328,15 @@ carca_Map.prototype.get_tile = function (coords) {
 
 //======================  The List of Players  =================================
 
-function Player_list(players) {
+function Player(options) {
+  this.name = options.name;
+
   // Start the game without any points
   this.score = 0;
 
   // Start the game with 7 followers to be placed
   this.followers = 7;
 
-  //
 }
 
 window.Carcaclone = Game;
