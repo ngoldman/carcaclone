@@ -3,11 +3,16 @@
   //=================================== The Game ================================
 
   function Game (options) {
+    // setup basics
     this.stack = new Carcaclone.Stack(); // An array of tiles to be placed
     this.board = new Carcaclone.Board(); // A 2D array of placed tiles
-    this.players = getPlayers(options.players);
+    this.players = generatePlayers(options.players);
 
     console.log('new game created!', this);
+
+    // setup turn
+    this.turn = 0;
+    this.nextTurn();
 
     /*
     // not yet implemented
@@ -22,7 +27,8 @@
       current_tile = this.stack.draw();
       // TODO implement CANT_ACCOMODATE
       if (board.cant_accommodate(current_tile) {
-        break;
+        current_tile = this.stack.draw();
+        continue;
       } else {
         // TODO implement SHOW_PLACEMENT_OPTIONS
         show_placement_options(map, current_tile);
@@ -47,9 +53,42 @@
     */
   }
 
+  Game.prototype.nextTurn = function() {
+    if (!this.stack.has_tiles()) {
+      return this.over();
+    }
+
+    var current_tile, placement;
+    var player_count = this.players.length;
+    var current_player = this.players[this.turn];
+    var current_tile = this.stack.draw();
+
+    console.log('current_player', current_player);
+    console.log('current_tile', current_tile);
+
+    // "In the rare case that a tile cannot be placed anywhere,
+    // it is removed from the game, and the player draws another."
+    if (this.board.cant_accommodate(current_tile)) {
+      console.log('skipping tile');
+      return this.nextTurn();
+    }
+
+    var self = this;
+
+    this.board.get_placement(current_tile, function(){
+      // cycle turn pointer and go to next turn once placement is done
+      self.turn = (self.turn + 1) % player_count;
+      self.nextTurn();
+    });
+  };
+
+  Game.prototype.over = function() {
+    console.log('game over, man, game over!');
+  };
+
   // private
 
-  function getPlayers (names) {
+  function generatePlayers (names) {
     var players = [];
 
     for (var i = names.length; i--;) {

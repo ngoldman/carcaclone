@@ -96,6 +96,23 @@
     return this.tiles[coords.x + 20][coords.y + 20];
   };
 
+  Board.prototype.cant_accommodate = function(tile) {
+    // TODO return true if tile can't be placed
+    return false;
+  };
+
+  Board.prototype.get_placement = function(tile, callback) {
+    // TODO show where tile can be placed
+    console.log('showing placement options');
+
+    // TODO add event listeners to placement options
+    console.log('wait for valid click');
+
+    // run callback function on click
+    console.log('placed!');
+    callback();
+  };
+
   // private
 
   // When we need to look at everything around a space on the board, we need to
