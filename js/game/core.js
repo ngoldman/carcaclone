@@ -77,6 +77,8 @@
 
     this.board.get_placement(current_tile, function(){
       // cycle turn pointer and go to next turn once placement is done
+      console.log('turn over');
+      console.log('tiles left', self.stack.tiles.length);
       self.turn = (self.turn + 1) % player_count;
       self.nextTurn();
     });

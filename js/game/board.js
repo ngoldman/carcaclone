@@ -107,9 +107,11 @@
 
     // TODO add event listeners to placement options
     console.log('wait for valid click');
+    console.log('tile placed');
 
-    // run callback function on click
-    console.log('placed!');
+    // TODO follower placement
+    console.log('follower placed (or not placed)');
+
     callback();
   };
 
