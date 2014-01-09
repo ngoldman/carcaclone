@@ -7,7 +7,7 @@
     this.board = new Carcaclone.Board(); // A 2D array of placed tiles
     this.players = getPlayers(options.players);
 
-    console.log('game object', this);
+    console.log('new game created!', this);
 
     /*
     // not yet implemented
